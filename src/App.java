@@ -19,18 +19,18 @@ public class App {
         System.out.println("\nMatriz de transición P ingresada:");
         imprimirMatriz(matrizP);
 
-        // =========================================================================
+        
         // PUNTO 2: Determinar si es posible alcanzar una distribución de estado estable
-        // =========================================================================
+    
         double[][] matrizLimite = calcularConvergencia(matrizP);
 
         if (matrizLimite != null) {
             System.out.println("\n[RESULTADO PUNTO 2]: SÍ es posible alcanzar una distribución de estado estable.");
             System.out.println("La matriz convergió a una única distribución límite (cadena ergódica).");
 
-            // =========================================================================
+            
             // PUNTO 3: Si el ítem 2 es positivo, calcular el estado estable y mostrarlo
-            // =========================================================================
+          
             // Se extrae directamente de la matriz límite hallada en el Punto 2
             double[] estadoEstable = obtenerEstadoEstableDeMatrizLimite(matrizLimite);
 
@@ -136,7 +136,7 @@ public class App {
     }
     
     /**
-     * PUNTO 3 (Opción 1): Obtiene el vector de estado estable extrayendo la primera
+     * Obtiene el vector de estado estable extrayendo la primera
      * fila de la matriz límite calculada en el Punto 2.
      */
     public static double[] obtenerEstadoEstableDeMatrizLimite(double[][] matrizLimite) {
