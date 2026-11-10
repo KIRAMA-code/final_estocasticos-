@@ -6,6 +6,7 @@ public class App {
     private static final double TOLERANCIA = 1e-6;
     // Límite de pasos para determinar si una matriz oscila y no converge
     private static final int MAX_ITERACIONES = 10000;
+
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in).useLocale(Locale.US);
 
@@ -21,7 +22,6 @@ public class App {
 
         
         // PUNTO 2: Determinar si es posible alcanzar una distribución de estado estable
-    
         double[][] matrizLimite = calcularConvergencia(matrizP);
 
         if (matrizLimite != null) {
@@ -30,7 +30,6 @@ public class App {
 
             
             // PUNTO 3: Si el ítem 2 es positivo, calcular el estado estable y mostrarlo
-          
             // Se extrae directamente de la matriz límite hallada en el Punto 2
             double[] estadoEstable = obtenerEstadoEstableDeMatrizLimite(matrizLimite);
 
@@ -39,10 +38,22 @@ public class App {
 
             System.out.println("\n[RESULTADO PUNTO 3]: Distribución de Estado Estable (Vector Pi):");
             imprimirVectorPi(estadoEstable);
+
+            // =========================================================================
+            // PUNTO 4: Calcular y mostrar el Mixing time
+            // =========================================================================
+            // Tolerancia de 0.25 definida en el documento de especificaciones
+            calcularMixingTime(matrizP, estadoEstable, 0.25);
+
         } else {
             System.out.println("\n[RESULTADO PUNTO 2]: NO es posible alcanzar una única distribución de estado estable.");
             System.out.println("Motivo: La cadena es periódica (no se estabiliza) o es reducible con múltiples estados absorbentes.");
         }
+
+        // =========================================================================
+        // PUNTO 5: Incluir una funcionalidad particular (Clasificación de Estados)
+        // =========================================================================
+        clasificarEstados(matrizP);
 
         scanner.close();
     }
@@ -153,6 +164,122 @@ public class App {
 
 
     // =========================================================================
+    // MÉTODOS DEL PUNTO 4 Y 5 (Desarrollados por ti)
+    // =========================================================================
+
+    /**
+     * PUNTO 4: Calcula y muestra el Mixing Time generando una tabla de convergencia.
+     */
+    public static void calcularMixingTime(double[][] P, double[] pi, double tolerancia) {
+        double[][] Pt = copiarMatriz(P);
+        int iteracion = 1;
+        int limite = 100000; // Límite de seguridad
+        double distancia = 1.0;
+
+        System.out.println("\n[RESULTADO PUNTO 4]: Cálculo del Mixing Time");
+        System.out.println("Tolerancia definida: " + tolerancia);
+        System.out.println("Iteración | Distancia de Variación Total (TVD)");
+        System.out.println("----------------------------------------------");
+
+        while (iteracion <= limite) {
+            distancia = calcularTVD(Pt, pi);
+            
+            System.out.printf("%9d | %.6f\n", iteracion, distancia);
+
+            if (distancia < tolerancia) {
+                System.out.println("\n=> Mixing Time alcanzado en la iteración: " + iteracion);
+                break;
+            }
+
+            Pt = multiplicarMatrices(Pt, P);
+            iteracion++;
+        }
+
+        if (iteracion > limite) {
+            System.out.println("\nSe alcanzó el límite de seguridad de " + limite + " iteraciones sin converger.");
+        }
+    }
+
+    /**
+     * Método auxiliar para calcular la Distancia de Variación Total (TVD)
+     */
+    private static double calcularTVD(double[][] Pt, double[] pi) {
+        int n = Pt.length;
+        double maxTVD = 0.0;
+        
+        for (int i = 0; i < n; i++) {
+            double suma = 0.0;
+            for (int j = 0; j < n; j++) {
+                suma += Math.abs(Pt[i][j] - pi[j]);
+            }
+            double tvdFila = suma / 2.0;
+            if (tvdFila > maxTVD) {
+                maxTVD = tvdFila;
+            }
+        }
+        return maxTVD;
+    }
+
+    /**
+     * PUNTO 5: Identifica y etiqueta cada estado.
+     */
+    public static void clasificarEstados(double[][] P) {
+        System.out.println("\n[RESULTADO PUNTO 5]: Clasificación Completa de los Estados");
+        int n = P.length;
+        boolean[][] alcanzabilidad = calcularMatrizAlcanzabilidad(P);
+
+        for (int i = 0; i < n; i++) {
+            boolean esAbsorbente = (Math.abs(P[i][i] - 1.0) < TOLERANCIA);
+            boolean esRecurrente = true;
+
+            if (!esAbsorbente) {
+                for (int j = 0; j < n; j++) {
+                    if (alcanzabilidad[i][j] && !alcanzabilidad[j][i]) {
+                        esRecurrente = false;
+                        break;
+                    }
+                }
+            }
+
+            System.out.print("Estado " + i + ": ");
+            if (esAbsorbente) {
+                System.out.println("Absorbente (Periodo: 1)");
+            } else if (esRecurrente) {
+                System.out.println("Recurrente");
+            } else {
+                System.out.println("Transitorio");
+            }
+        }
+    }
+
+    /**
+     * Método auxiliar para generar la matriz de alcanzabilidad utilizando Warshall.
+     */
+    private static boolean[][] calcularMatrizAlcanzabilidad(double[][] P) {
+        int n = P.length;
+        boolean[][] R = new boolean[n][n];
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (P[i][j] > 0) {
+                    R[i][j] = true;
+                }
+            }
+            R[i][i] = true; 
+        }
+
+        for (int k = 0; k < n; k++) {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    R[i][j] = R[i][j] || (R[i][k] && R[k][j]);
+                }
+            }
+        }
+        return R;
+    }
+
+
+    // =========================================================================
     // MÉTODOS AUXILIARES DE OPERACIONES MATRICIALES Y SALIDA POR CONSOLA
     // =========================================================================
 
@@ -221,8 +348,4 @@ public class App {
         }
         System.out.println("]");
     }
-
 }
-
-
-    
